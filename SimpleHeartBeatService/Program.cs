@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Topshelf;
 
 namespace SimpleHeartBeatService
 {
@@ -10,12 +11,27 @@ namespace SimpleHeartBeatService
     {
         static void Main(string[] args)
         {
-            // The code provided will print ‘Hello World’ to the console.
-            // Press Ctrl+F5 (or go to Debug > Start Without Debugging) to run your app.
-            Console.WriteLine("Hello World!");
-            Console.ReadKey();
+            // downloaded Topshelf nuget package and using it to setup a service to run in the background.
+            // Youtube demo - Tim Corey
+            //https://www.youtube.com/watch?v=y64L-3HKuP0
 
-            // Go to http://aka.ms/dotnet-get-started-console to continue learning how to build a console app! 
+            var exitCode = HostFactory.Run(x =>
+            {
+                x.Service<HeartBeat>(s =>
+                {
+                    s.ConstructUsing(heartbeat => new HeartBeat());
+                    s.WhenStarted(heartbeat => heartbeat.Start());
+                    s.WhenStopped(heartbeat => heartbeat.Stop());
+                });
+
+                x.RunAsLocalSystem();
+                x.SetServiceName("HeartbeatService");
+                x.SetDisplayName("Heart Beat");
+                x.SetDescription("Records the heartbeat every second");
+            });
+
+            int exitCodeVal = (int)Convert.ChangeType(exitCode, exitCode.GetTypeCode());
+            Environment.ExitCode = exitCodeVal;
         }
     }
 }
